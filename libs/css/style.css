@@ -29,7 +29,7 @@
   opacity: 0;
 }
 .m-p-g__thumbs-img:hover {
-  filter: brightness(110%);
+  filter: brightness(120%);
 }
 .m-p-g__fullscreen {
   position: fixed;
@@ -50,7 +50,7 @@
 .m-p-g__fullscreen.active {
   transition: background 0.25s ease-out, visibility 0.01s 0s linear;
   visibility: visible;
-  background: rgba(0, 0, 0, 0.884);
+  background: rgba(0, 0, 0, 0.8);
 }
 .m-p-g__fullscreen-img {
   pointer-events: none;
@@ -164,14 +164,14 @@
 }
 
 /* DEMO */
-body {
-  /* background: #fefefe;
+/* body {
+  background: #fefefe;
   color: white;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-align: center;
-  font-family: "Roboto Mono"; */
-}
+  font-family: "Roboto Mono";
+} */
 
 h2 {
   font-weight: 300;
