@@ -29,7 +29,7 @@
   opacity: 0;
 }
 .m-p-g__thumbs-img:hover {
-  filter: brightness(120%);
+  filter: brightness(110%);
 }
 .m-p-g__fullscreen {
   position: fixed;
@@ -202,4 +202,36 @@ h2 {
     min-width: 0;
     font-size: 14px;
   }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+#navbar {
+  position: sticky;
+  top: 0;
+}
+
+#navbar ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+#navbar li {
+  float: left;
+}
+
+#navbar li a {
+  display: block;
+  padding: 10px;
+  text-decoration: none;
+  color: #ffffff;
+}
+
+#navbar li a:hover {
+  background-color: #ddd;
 }
