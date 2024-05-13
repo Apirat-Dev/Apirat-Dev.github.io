@@ -1,6 +1,6 @@
 document.getElementById("generateButton").addEventListener("click", function() {
     function getRandomRestaurant(restaurants) {
-        const randomIndex = Math.floor(Math.random(Math.seedrandom(Date.now())) * restaurants.length);
+        const randomIndex = Math.floor(Math.random(Math.seedrandom(Math.seedrandom())) * restaurants.length);
         return restaurants[randomIndex];
     }
 
