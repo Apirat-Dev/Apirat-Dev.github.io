@@ -9,7 +9,7 @@ document.getElementById("generateButton").addEventListener("click", function() {
         .then(restaurants => {
             const randomRestaurant = getRandomRestaurant(restaurants);
             Swal.fire({
-                title: 'มึงควรไป',
+                title: 'มึงควรไปแดก',
                 text: randomRestaurant,
                 icon: 'info',
                 confirmButtonText: 'OK'
