@@ -9,7 +9,6 @@
   position: absolute;
   height: 80vh;
   width: 80vw;
-  /* top: 200px; */
   bottom: 0;
   left: 0;
   right: 0px;
@@ -186,7 +185,7 @@ path#f3-l9 {
 #paw-right--down,
 #paw-left--up,
 #paw-left--down {
-  animation: blink 300ms infinite;
+  animation: blink 100ms infinite;
 }
 
 #paw-right--up,
@@ -228,7 +227,7 @@ path#f3-l9 {
 }
 
 .loading-blurbs code {
-  --animation-duration: 500ms;
+  --animation-duration: 200ms;
   display: block;
   position: absolute;
   width: 100%;
