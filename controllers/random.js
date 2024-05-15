@@ -11,7 +11,8 @@ document.getElementById("generateButton").addEventListener("click", function() {
             Swal.fire({
                 title: 'มึงควรไปแดก',
                 text: randomRestaurant,
-                icon: 'info',
+                // icon: 'info',
+                iconHtml: '<iframe src="./views/unt/index.html" height="150" width="300"></iframe>',
                 confirmButtonText: 'OK'
             });
         })
