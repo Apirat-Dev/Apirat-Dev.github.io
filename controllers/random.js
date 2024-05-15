@@ -12,7 +12,8 @@ document.getElementById("generateButton").addEventListener("click", function() {
                 title: 'มึงควรไปแดก',
                 text: randomRestaurant,
                 // icon: 'info',
-                iconHtml: '<iframe src="./views/unt/index.html" height="150" width="300"></iframe>',
+                // iconHtml: '<iframe src="./views/unt/index.html" height="150" width="300"></iframe>',
+                iconHtml: '<embed type="text/html" src="./views/unt/index.html" height="150" width="300">',
                 confirmButtonText: 'OK'
             });
         })
