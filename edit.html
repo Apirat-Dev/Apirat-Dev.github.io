@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="th">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>GitHub Restaurants Editor (Auto Merge)</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="card shadow-sm p-4">
+      <h1 class="h3 mb-3 text-center text-primary">Restaurants Editor</h1>
+      <!-- <p class="text-muted">หน้าเว็บนี้จะโหลดไฟล์ <code>config/restaurants.json</code> จาก repo <strong>Apirat-Dev/Apirat-Dev.github.io</strong> และให้คุณเพิ่มชื่อร้านใหม่ จากนั้นสามารถอัปเดตไฟล์โดยอัตโนมัติรวมถึง Merge ทันที</p> -->
+
+      <div class="mb-3">
+        <a id="backToMain" class="btn btn-outline-primary btn-sm" href="random.html">Home</a>
+      </div>
+
+      <div class="row g-3 mb-3">
+        <div class="col-md-8">
+          <input id="newName" class="form-control" placeholder="Enter new restaurant name then, click Add" />
+        </div>
+        <div class="col-md-4 d-grid">
+          <button id="addBtn" class="btn btn-success">Add</button>
+        </div>
+      </div>
+
+      <div class="mb-3">
+        <button id="reloadBtn" class="btn btn-outline-primary btn-sm">Load data</button>
+        <!-- <button id="proposeBtn" class="btn btn-primary btn-sm ms-2">สร้าง Pull Request (ใช้ token ของฉัน)</button> -->
+        <button id="autoMergeBtn" class="btn btn-primary btn-sm ms-2">Commit</button>
+      </div>
+
+      <h5 class="mt-3">Restaurant List</h5>
+      <ul id="list" class="list-group mb-3" style="min-height:120px"></ul>
+
+      <div class="alert alert-secondary" id="status">สถานะ: พร้อม</div>
+      <h6 class="mt-3">Preview JSON</h6>
+      <pre id="preview" class="bg-dark text-light p-3 rounded" style="min-height:120px">[]</pre>
+    </div>
+  </div>
+
+  <script>
+    const OWNER = 'Apirat-Dev';
+    const REPO = 'Apirat-Dev.github.io';
+    const PATH = 'config/restaurants.json';
+    const RAW_URL = `https://raw.githubusercontent.com/${OWNER}/${REPO}/main/${PATH}`;
+
+    const statusEl = document.getElementById('status');
+    const listEl = document.getElementById('list');
+    const previewEl = document.getElementById('preview');
+
+    function setStatus(text, type='secondary'){ statusEl.className = 'alert alert-' + type; statusEl.textContent = 'Status: ' + text; }
+
+    let restaurants = [];
+
+    function renderList(){
+      listEl.innerHTML = '';
+      restaurants.forEach((r,i)=>{
+        const li = document.createElement('li');
+        li.className = 'list-group-item d-flex justify-content-between align-items-center';
+        li.textContent = r;
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-sm btn-outline-danger';
+        btn.textContent = 'Remove';
+        btn.onclick = ()=>{ restaurants.splice(i,1); renderList(); updatePreview(); };
+        li.appendChild(btn);
+        listEl.appendChild(li);
+      });
+      if(restaurants.length===0){
+        const li = document.createElement('li'); li.className='list-group-item text-muted'; li.textContent='(Do not have any data)'; listEl.appendChild(li);
+      }
+    }
+
+    function updatePreview(){ previewEl.textContent = JSON.stringify(restaurants, null, 2); }
+
+    async function loadFromGit(){
+      try{
+        setStatus('Fetching data from GitHub...', 'info');
+        const res = await fetch(RAW_URL);
+        if(!res.ok) throw new Error('Cannot load file from GitHub: ' + res.status);
+        const json = await res.json();
+        if(!Array.isArray(json)) throw new Error('File format is not Array');
+        restaurants = json.slice();
+        renderList(); updatePreview();
+        setStatus('Data loaded', 'success');
+      }catch(err){ console.error(err); setStatus('Error: ' + err.message, 'danger'); }
+    }
+
+    document.getElementById('reloadBtn').addEventListener('click', ()=> loadFromGit());
+
+    document.getElementById('addBtn').addEventListener('click', ()=>{
+      const name = document.getElementById('newName').value.trim();
+      if(!name) return alert('Please enter a restaurant name');
+      restaurants.push(name);
+      document.getElementById('newName').value = '';
+      renderList(); updatePreview();
+    });
+
+    async function promptForToken(){
+      return prompt('โปรดวาง GitHub Personal Access Token ของคุณ (scopes: repo)');
+    }
+
+    async function ghFetch(path, token, opts={}) {
+      const headers = opts.headers || {};
+      headers['Accept'] = 'application/vnd.github+json';
+      headers['Authorization'] = 'token ' + token;
+      const res = await fetch('https://api.github.com' + path, {...opts, headers});
+
+      if (!res.ok) {
+        const txt = await res.text();
+        throw new Error('GitHub API error ' + res.status + ': ' + txt);
+      }
+
+      // ถ้า response ไม่มี body หรือ status 204 → return null
+      const text = await res.text();
+      if (!text) return null;
+      try {
+        return JSON.parse(text);
+      } catch (e) {
+        console.warn('Response not JSON:', text);
+        return text; // คืนค่าเป็น string แทน
+      }
+    }
+
+    async function createBranch(owner, repo, newBranchName, token){
+      const repoInfo = await ghFetch(`/repos/${owner}/${repo}`, token);
+      const defaultBranch = repoInfo.default_branch;
+      const ref = await ghFetch(`/repos/${owner}/${repo}/git/refs/heads/${defaultBranch}`, token);
+      const sha = ref.object.sha;
+      await ghFetch(`/repos/${owner}/${repo}/git/refs`, token, { method: 'POST', body: JSON.stringify({ref: 'refs/heads/' + newBranchName, sha}) });
+      return {newBranchName, defaultBranch};
+    }
+
+    async function putFile(owner, repo, path, contentStr, commitMessage, branch, token){
+      let sha;
+      try{
+        const fileInfo = await ghFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${branch}`, token);
+        sha = fileInfo.sha;
+      }catch(e){ }
+      const body = { message: commitMessage || 'Update restaurants.json via web form', content: btoa(unescape(encodeURIComponent(contentStr))), branch };
+      if(sha) body.sha = sha;
+      const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
+        method: 'PUT', headers: {'Authorization':'token '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'}, body: JSON.stringify(body)
+      });
+      if(!res.ok){ const txt = await res.text(); throw new Error('Failed to PUT file: ' + res.status + ' ' + txt); }
+      return res.json();
+    }
+
+    async function createPullRequest(owner, repo, headBranch, baseBranch, title, bodyText, token){
+      return ghFetch(`/repos/${owner}/${repo}/pulls`, token, { method: 'POST', body: JSON.stringify({title, head: headBranch, base: baseBranch, body: bodyText}) });
+    }
+
+    async function mergePullRequest(owner, repo, pullNumber, token){
+      return ghFetch(`/repos/${owner}/${repo}/pulls/${pullNumber}/merge`, token, { method: 'PUT', body: JSON.stringify({merge_method: 'merge'}) });
+    }
+
+    async function deleteBranch(owner, repo, branch, token){
+      return ghFetch(`/repos/${owner}/${repo}/git/refs/heads/${branch}`, token, { method: 'DELETE' });
+    }
+
+    // document.getElementById('proposeBtn').addEventListener('click', async ()=>{
+    //   try{
+    //     const token = await promptForToken();
+    //     if(!token){ setStatus('ยกเลิก: ไม่มี token', 'warning'); return; }
+    //     const newBranch = 'web-edit-restaurants-' + Date.now().toString(36);
+    //     const {defaultBranch} = await createBranch(OWNER, REPO, newBranch, token);
+    //     const contentStr = JSON.stringify(restaurants, null, 2);
+    //     await putFile(OWNER, REPO, PATH, contentStr, 'Update restaurants.json via web form', newBranch, token);
+    //     const pr = await createPullRequest(OWNER, REPO, newBranch, defaultBranch, 'Update restaurants.json', 'Update by web form', token);
+    //     setStatus('Pull Request created: ' + pr.html_url, 'success');
+    //     window.open(pr.html_url, '_blank');
+    //   }catch(err){ console.error(err); setStatus('Error: ' + err.message, 'danger'); }
+    // });
+
+    // New Auto Merge button
+    document.getElementById('autoMergeBtn').addEventListener('click', async ()=>{
+      try{
+        if(restaurants.length===0) return alert('ไม่มีข้อมูลที่จะอัปเดต');
+        setStatus('ขอ token...', 'info');
+        // const token = await promptForToken();
+        const token = atob('Z2l0aHViX3BhdF8xMUFRVkZVWlkwMlNGNWVpWEJ4MmJ4XzNIbTZSeUJDUWdHc2N2RnZUUmZVQVhwcEVrMGdRcjZVelE0WUwzRzZXNVNMQ09YNVU0REFHTW56MWxF');
+        if(!token){ setStatus('ยกเลิก: ไม่มี token', 'warning'); return; }
+        const ts = Date.now().toString(36);
+        const branchName = 'auto-merge-restaurants-' + ts;
+        const {defaultBranch} = await createBranch(OWNER, REPO, branchName, token);
+        setStatus('Committing file to branch: ' + branchName, 'info');
+        const contentStr = JSON.stringify(restaurants, null, 2);
+        await putFile(OWNER, REPO, PATH, contentStr, 'Update restaurants.json via Auto Merge', branchName, token);
+        setStatus('Creating Pull Request...', 'info');
+        const pr = await createPullRequest(OWNER, REPO, branchName, defaultBranch, 'Auto Merge restaurants.json', 'Update by web form', token);
+        setStatus('Merging PR automatically...', 'info');
+        await mergePullRequest(OWNER, REPO, pr.number, token);
+        setStatus('Merge Complete! Deleting temporary branch...', 'info');
+        await deleteBranch(OWNER, REPO, branchName, token);
+        setStatus('Success — Data updated on main', 'success');
+      }catch(err){ console.error(err); setStatus('Error: ' + err.message, 'danger'); }
+    });
+
+    // Initial load
+    loadFromGit();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
