@@ -54,6 +54,58 @@
 
     let restaurants = [];
 
+    // Encrypt Decrypt functions ===========================================================================================================================
+    // แปลง string → ArrayBuffer
+    function encode(str) {
+      return new TextEncoder().encode(str);
+    }
+
+    // แปลง ArrayBuffer → string
+    function decode(buf) {
+      return new TextDecoder().decode(buf);
+    }
+
+    // แปลง ArrayBuffer → Base64
+    function bufToBase64(buf) {
+      let binary = '';
+      new Uint8Array(buf).forEach(b => binary += String.fromCharCode(b));
+      return btoa(binary);
+    }
+
+    // แปลง Base64 → ArrayBuffer
+    function base64ToBuf(b64) {
+      return Uint8Array.from(atob(b64), c=>c.charCodeAt(0)).buffer;
+    }
+
+    // สร้าง key จาก passphrase
+    async function getKey(passphrase) {
+      const enc = encode(passphrase);
+      const hash = await crypto.subtle.digest('SHA-256', enc);
+      return crypto.subtle.importKey('raw', hash, 'AES-GCM', false, ['encrypt','decrypt']);
+    }
+
+    // Encrypt string → Base64
+    async function encryptText(text, passphrase) {
+      const key = await getKey(passphrase);
+      const iv = crypto.getRandomValues(new Uint8Array(12)); // AES-GCM IV 12 bytes
+      const encrypted = await crypto.subtle.encrypt({name:'AES-GCM', iv}, key, encode(text));
+      // เก็บ iv+encrypted เป็น Base64
+      const combined = new Uint8Array(iv.byteLength + encrypted.byteLength);
+      combined.set(iv, 0);
+      combined.set(new Uint8Array(encrypted), iv.byteLength);
+      return bufToBase64(combined.buffer);
+    }
+
+    // Decrypt Base64 → string
+    async function decryptText(b64, passphrase) {
+      const buf = base64ToBuf(b64);
+      const iv = buf.slice(0, 12);
+      const data = buf.slice(12);
+      const key = await getKey(passphrase);
+      const decrypted = await crypto.subtle.decrypt({name:'AES-GCM', iv: new Uint8Array(iv)}, key, data);
+      return decode(decrypted);
+    }
+    //==============================================================================================================================================================
     function renderList(){
       listEl.innerHTML = '';
       restaurants.forEach((r,i)=>{
@@ -177,10 +229,15 @@
     document.getElementById('autoMergeBtn').addEventListener('click', async ()=>{
       try{
         if(restaurants.length===0) return alert('ไม่มีข้อมูลที่จะอัปเดต');
-        setStatus('ขอ token...', 'info');
+        setStatus('Requesting token...', 'info');
         // const token = await promptForToken();
-        const token = atob('Z2l0aHViX3BhdF8xMUFRVkZVWlkwMlNGNWVpWEJ4MmJ4XzNIbTZSeUJDUWdHc2N2RnZUUmZVQVhwcEVrMGdRcjZVelE0WUwzRzZXNVNMQ09YNVU0REFHTW56MWxF');
+        // const token = atob('Z2l0aHViX3BhdF8xMUFRVkZVWlkwMlNGNWVpWEJ4MmJ4XzNIbTZSeUJDUWdHc2N2RnZUUmZVQVhwcEVrMGdRcjZVelE0WUwzRzZXNVNMQ09YNVU0REFHTW56MWxF');
+        const encryptedToken = 'YbJGQBbS4J9U1xkvQCdqXuWQLR/jfJpdgSCs2Z8p5UQM5fH1RGbBbSGRs7NWN6VknN5OeijH8RhXI0WjE4HPHnTJ1nYKw7uMiNd01Vq3gce79srnBksVdXys9BY544MoHg6g+kifPUUayNfnW7pFFDotKZ4dhvgqhA==';
+        const passphrase = 'apirat';
+        const token = await decryptText(encryptedToken, passphrase);
+
         if(!token){ setStatus('ยกเลิก: ไม่มี token', 'warning'); return; }
+        
         const ts = Date.now().toString(36);
         const branchName = 'auto-merge-restaurants-' + ts;
         const {defaultBranch} = await createBranch(OWNER, REPO, branchName, token);
