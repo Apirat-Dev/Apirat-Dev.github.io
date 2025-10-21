@@ -127,8 +127,8 @@
         // Select restaurant action
         function selectRestaurant(name) {
             // Search for restaurant menu pictures on Google Images with location
-            const searchQuery = encodeURIComponent(`${name} ฉะเชิงเทรา`);
-            const googleImagesUrl = `https://www.google.com/search?q=${searchQuery}&tbm=isch`;
+            const searchQuery = encodeURIComponent(`${name}`);
+            const googleImagesUrl = `https://www.google.com/search?q=${searchQuery}&sca_esv=8dfd45bbc5676ef5&sxsrf=AE3TifODIt4fiMQ6wTLvCq2bgqOwakbb9A%3A1761017803825&source=hp&ei=y__2aLXaMIaW4-EPlcKdsQU&iflsig=AOw8s4IAAAAAaPcN2wdDDKEp0qz54KBeiFdwJlQTmxju&oq=เ&gs_lp=Egdnd3Mtd2l6IgPguYAqAggAMgQQIxgnMgoQIxjwBRgnGMkCMgoQIxjwBRgnGMkCMgQQABgDMgQQABgDMgQQABgDMgQQABgDMgQQABgDMgcQABgDGI0GMg4QABiABBixAxiDARiKBUiaDFAAWABwAHgAkAEAmAFSoAFSqgEBMbgBA8gBAPgBAZgCAaACWJgDAJIHATGgB8EKsgcBMbgHWMIHAzItMcgHBQ&sclient=gws-wiz`;
             window.open(googleImagesUrl, '_blank');
         }
 
