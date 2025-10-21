@@ -1,5 +1,6 @@
 let selectedRestaurants = [];
 let count = 0;
+let randNumber = Math.floor(Math.random() * (5 - 2 + 1)) + 2;
 
 document.getElementById("generateButton").addEventListener("click", function() {
     function getRandomRestaurant(restaurants) {
@@ -30,15 +31,25 @@ document.getElementById("generateButton").addEventListener("click", function() {
         .then(restaurants => {
             const randomRestaurant = getRandomRestaurant(restaurants);
             count++;
-            console.log(count);
-            if(count === 5){
+            if(count === 2 && randNumber === 2){
                 Swal.fire({
-                    title: 'มึงโกงกูละไอ้สัสสส!!',
-                    text: 'จิ้มซ้ำทำเหี้ยอะไร 4-5 รอบ!!',
+                    title: "<h1>" + 'เห้ยย!!' + "</h1>",
+                    html: `<span>มึงอย่าโกงดิวะ!!</span>`,
                     iconHtml: '<iframe src="./views/unt/index.html" height="150" width="300"></iframe>',
                     confirmButtonText: 'OK'
                 });
                 count = 0;
+                randNumber = Math.floor(Math.random() * (5 - 2 + 1)) + 2;
+            }
+            else if(count === randNumber){
+                Swal.fire({
+                    title: "<h1 style='color:red; text-shadow: 0 0 2px #a11111ff, 0 0 25px #660000;'>" + 'มึงโกงกูละไอ้สัสสส!!' + "</h1>",
+                    html: `<span style="color: red; text-shadow: 0 0 2px #a11111ff, 0 0 20px #660000;">จะจิ้มซ้ำทำเหี้ยอะไร ${randNumber - 1} - ${randNumber} รอบ!!</span>`,
+                    iconHtml: '<iframe src="./views/unt/index.html" height="150" width="300"></iframe>',
+                    confirmButtonText: 'OK'
+                });
+                count = 0;
+                randNumber = Math.floor(Math.random() * (5 - 2 + 1)) + 2;
             }
             else{
                 Swal.fire({
