@@ -100,6 +100,7 @@
     }
 
     let restaurants = [];
+    let origginalData = [];
 
     // Encrypt Decrypt functions ===========================================================================================================================
     // แปลง string → ArrayBuffer
@@ -157,6 +158,7 @@
       if(restaurants.length===0){
         const li = document.createElement('li'); li.className='list-group-item text-muted'; li.textContent='(Do not have any data)'; listEl.appendChild(li);
       }
+      origginalData = restaurants;
     }
 
     function updatePreview(){ previewEl.textContent = JSON.stringify(restaurants, null, 2); }
@@ -249,7 +251,7 @@
     // New Auto Merge button
     document.getElementById('autoMergeBtn').addEventListener('click', async ()=>{
       try{
-        if(restaurants.length===0) return alert('ไม่มีข้อมูลที่จะอัปเดต');
+        if(JSON.stringify(origginalData) === JSON.stringify(restaurants)) return alert('Do note have any update data');
         setStatus('Requesting token...', 'info');
         // const token = await promptForToken();
         const encryptedToken = 'YbJGQBbS4J9U1xkvQCdqXuWQLR/jfJpdgSCs2Z8p5UQM5fH1RGbBbSGRs7NWN6VknN5OeijH8RhXI0WjE4HPHnTJ1nYKw7uMiNd01Vq3gce79srnBksVdXys9BY544MoHg6g+kifPUUayNfnW7pFFDotKZ4dhvgqhA==';
