@@ -1,4 +1,5 @@
 let selectedRestaurants = [];
+let count = 0;
 
 document.getElementById("generateButton").addEventListener("click", function() {
     function getRandomRestaurant(restaurants) {
@@ -24,17 +25,29 @@ document.getElementById("generateButton").addEventListener("click", function() {
 
         return randomRestaurant;
     }
-
     fetch('config/restaurants.json')
         .then(response => response.json())
         .then(restaurants => {
             const randomRestaurant = getRandomRestaurant(restaurants);
-            Swal.fire({
-                title: 'มึงควรไปแดก',
-                text: randomRestaurant,
-                iconHtml: '<iframe src="./views/unt/index.html" height="150" width="300"></iframe>',
-                confirmButtonText: 'OK'
-            });
+            count++;
+            console.log(count);
+            if(count === 5){
+                Swal.fire({
+                    title: 'มึงโกงกูละไอ้สัสสส!!',
+                    text: 'จิ้มซ้ำทำเหี้ยอะไร 4-5 รอบ!!',
+                    iconHtml: '<iframe src="./views/unt/index.html" height="150" width="300"></iframe>',
+                    confirmButtonText: 'OK'
+                });
+                count = 0;
+            }
+            else{
+                Swal.fire({
+                    title: 'มึงควรไปแดก',
+                    text: randomRestaurant,
+                    iconHtml: '<iframe src="./views/unt/index.html" height="150" width="300"></iframe>',
+                    confirmButtonText: 'OK'
+                });
+            }
         })
         .catch(error => console.error('Error loading restaurants:', error));
 });
