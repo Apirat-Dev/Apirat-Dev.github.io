@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Menu</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <style>
+        .restaurant-card {
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .restaurant-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .restaurant-number {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="mb-3"><i class="fas fa-utensils"></i> Restaurant Menu</h1>
+            <p class="lead">All available restaurants in our database</p>
+            <div class="mt-4">
+                <a href="random.html" class="btn btn-primary me-2">
+                    <i class="fas fa-random"></i> Random Restaurant
+                </a>
+                <a href="edit.html" class="btn btn-outline-warning">
+                    <i class="fas fa-edit"></i> Manage Restaurants
+                </a>
+                <!-- <a href="index.html" class="btn btn-outline-secondary">
+                    <i class="fas fa-home"></i> Home
+                </a> -->
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6 mx-auto">
+                <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="🔍 Search restaurants...">
+            </div>
+        </div>
+
+        <div class="alert alert-info text-center" id="restaurantCount">
+            <strong>Total Restaurants: <span id="totalCount">0</span></strong>
+        </div>
+
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4" id="restaurantList">
+            <!-- Restaurant cards will be inserted here -->
+        </div>
+
+        <div id="noResults" class="text-center mt-5" style="display: none;">
+            <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+            <h3>No restaurants found</h3>
+            <p class="text-muted">Try a different search term</p>
+        </div>
+    </div>
+
+    <script>
+        let restaurants = [];
+
+        // Load restaurants from JSON file
+        async function loadRestaurants() {
+            try {
+                const response = await fetch('config/restaurants.json');
+                restaurants = await response.json();
+                displayRestaurants(restaurants);
+                updateCount(restaurants.length);
+            } catch (error) {
+                console.error('Error loading restaurants:', error);
+                document.getElementById('restaurantList').innerHTML = 
+                    '<div class="col-12"><div class="alert alert-danger">Error loading restaurants</div></div>';
+            }
+        }
+
+        // Display restaurants as cards
+        function displayRestaurants(restaurantList) {
+            const container = document.getElementById('restaurantList');
+            const noResults = document.getElementById('noResults');
+            
+            if (restaurantList.length === 0) {
+                container.innerHTML = '';
+                noResults.style.display = 'block';
+                return;
+            }
+
+            noResults.style.display = 'none';
+            container.innerHTML = restaurantList.map((restaurant, index) => `
+                <div class="col">
+                    <div class="card restaurant-card h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <span class="badge bg-primary restaurant-number">#${index + 1}</span>
+                                <i class="fas fa-store text-warning"></i>
+                            </div>
+                            <h5 class="card-title">${restaurant}</h5>
+                            <div class="mt-3">
+                                <button class="btn btn-sm btn-outline-primary" onclick="selectRestaurant('${restaurant.replace(/'/g, "\\'")}')">
+                                    <i class="fas fa-check"></i> Select
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Update restaurant count
+        function updateCount(count) {
+            document.getElementById('totalCount').textContent = count;
+        }
+
+        // Search functionality
+        document.getElementById('searchInput').addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase();
+            const filtered = restaurants.filter(restaurant => 
+                restaurant.toLowerCase().includes(searchTerm)
+            );
+            displayRestaurants(filtered);
+            updateCount(filtered.length);
+        });
+
+        // Select restaurant action
+        function selectRestaurant(name) {
+            // Search for restaurant menu pictures on Google Images with location
+            const searchQuery = encodeURIComponent(`${name} ฉะเชิงเทรา`);
+            const googleImagesUrl = `https://www.google.com/search?q=${searchQuery}&tbm=isch`;
+            window.open(googleImagesUrl, '_blank');
+        }
+
+        // Load restaurants on page load
+        loadRestaurants();
+    </script>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+<footer class="mt-5 py-4 bg-dark">
+    <div class="container text-center" style="cursor: pointer;" onclick="window.open('https://github.com/Apirat-Dev/Apirat-Dev.github.io/blob/main', '_blank')">
+        <i class="fab fa-github"></i>
+        Apirat-Dev © 2025
+    </div>
+</footer>
+</html>
