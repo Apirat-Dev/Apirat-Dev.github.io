@@ -251,7 +251,7 @@
     // New Auto Merge button
     document.getElementById('autoMergeBtn').addEventListener('click', async ()=>{
       try{
-        if(JSON.stringify(origginalData) === JSON.stringify(restaurants)) return alert('Do note have any update data');
+        //if(JSON.stringify(origginalData) === JSON.stringify(restaurants)) return alert('Do note have any update data');
         setStatus('Requesting token...', 'info');
         // const token = await promptForToken();
         const encryptedToken = 'YbJGQBbS4J9U1xkvQCdqXuWQLR/jfJpdgSCs2Z8p5UQM5fH1RGbBbSGRs7NWN6VknN5OeijH8RhXI0WjE4HPHnTJ1nYKw7uMiNd01Vq3gce79srnBksVdXys9BY544MoHg6g+kifPUUayNfnW7pFFDotKZ4dhvgqhA==';
@@ -280,4 +280,5 @@
     loadFromGit();
   </script>
 </body>
+
 </html>
